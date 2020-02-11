@@ -1,0 +1,5 @@
+name: Default Language for Taxonomy Terms
+description: Shows the taxonomy terms labels in site's default language when editing nodes, not the translated terms
+package: Multilanguage
+type: module
+core: 8.x
