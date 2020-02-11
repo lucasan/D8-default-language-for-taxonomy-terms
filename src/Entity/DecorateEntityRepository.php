@@ -6,10 +6,10 @@ namespace Drupal\prevent_translation\Entity;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepository;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
-use Drupal\Core\Routing\AdminContext;
 
 /**
  * Class DecorateEntityRepository
@@ -18,11 +18,9 @@ use Drupal\Core\Routing\AdminContext;
  */
 class DecorateEntityRepository extends EntityRepository {
   /**
-   * The admin context.
-   *
-   * @var AdminContext
+   * @var CurrentRouteMatch
    */
-  protected $adminContext;
+  protected $route_match;
 
   /**
    * @var LanguageManagerInterface
@@ -32,16 +30,16 @@ class DecorateEntityRepository extends EntityRepository {
   /**
    * DecorateEntityRepository constructor.
    *
-   * @param AdminContext $adminContext
+   * @param CurrentRouteMatch $route_match
    * @param EntityTypeManagerInterface $entity_type_manager
    * @param LanguageManagerInterface $language_manager
    * @param ContextRepositoryInterface|NULL $context_repository
    */
-  public function __construct(AdminContext $adminContext,
+  public function __construct(CurrentRouteMatch $route_match,
                               EntityTypeManagerInterface $entity_type_manager,
                               LanguageManagerInterface $language_manager,
                               ContextRepositoryInterface $context_repository = NULL) {
-    $this->adminContext = $adminContext;
+    $this->route_match = $route_match;
     $this->language_manager = $language_manager;
 
     parent::__construct($entity_type_manager, $language_manager, $context_repository);
@@ -56,8 +54,10 @@ class DecorateEntityRepository extends EntityRepository {
    * @return EntityInterface|\Drupal\Core\TypedData\TranslatableInterface
    */
   public function getTranslationFromContext(EntityInterface $entity, $langcode = NULL, $context = []) {
-    // Inject the default language only for Taxonomy terms in Admin pages
-    if ($entity instanceof Term && $this->adminContext->isAdminRoute()) {
+    $route_name = $this->route_match->getCurrentRouteMatch()->getRouteName();
+
+    // Inject the default language only for Taxonomy terms in Node Edit form
+    if ($entity instanceof Term && 'entity.node.edit_form' === $route_name) {
       $langcode = $this->language_manager->getDefaultLanguage()->getId();
     }
 
